@@ -1,0 +1,9 @@
+{
+	"hello": "Hello",
+	"world": "World",
+	"test.message": "Test message",
+	"error.not.found": "Not found",
+	"error.internal": "Internal server error",
+	"grpc.error": "GRPC error message",
+	"api.error": "API error message"
+}

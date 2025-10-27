@@ -1,0 +1,9 @@
+{
+	"hello": "你好",
+	"world": "世界",
+	"test.message": "测试消息",
+	"error.not.found": "未找到",
+	"error.internal": "内部服务器错误",
+	"grpc.error": "GRPC错误消息",
+	"api.error": "API错误消息"
+}

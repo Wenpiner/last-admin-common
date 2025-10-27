@@ -1,4 +1,4 @@
-package redis
+package last_redis
 
 type RedisKeyPrefix string
 

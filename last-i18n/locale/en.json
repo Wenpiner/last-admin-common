@@ -1,0 +1,13 @@
+{
+	"common": {
+		"targetNotExist": "Target not exist",
+		"dataConflict": "Data conflict",
+		"validationFailed": "Validation failed",
+		"consistencyCheckFailed": "Consistency check failed",
+		"databaseError": "Database error",
+		"deleteSuccess": "Delete success",
+		"tenantNotMatch": "Tenant not match",
+		"tenantDisabled": "Tenant disabled"
+
+	}
+}
