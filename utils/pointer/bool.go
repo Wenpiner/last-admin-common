@@ -12,3 +12,11 @@ func GetBool(v *bool) bool {
 func ToBoolPtr(v bool) *bool {
 	return &v
 }
+
+// ToBoolPtrIfNotFalse returns a pointer to the value if it's not false, otherwise returns nil.
+func ToBoolPtrIfNotFalse(v bool) *bool {
+	if !v {
+		return nil
+	}
+	return &v
+}

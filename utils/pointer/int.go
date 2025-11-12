@@ -18,6 +18,15 @@ func GetInt32(v *int32) int32 {
 	return *v
 }
 
+// GetInt64 returns the value of the pointer if it's not nil, otherwise returns 0.
+func GetInt64(v *int64) int64 {
+	if v == nil {
+		return 0
+	}
+
+	return *v
+}
+
 // ToUint32Ptr returns a pointer to the value.
 func ToUint32Ptr(v uint32) *uint32 {
 	return &v
@@ -48,6 +57,13 @@ func ToUint32PtrIfNotZero(v uint32) *uint32 {
 
 // ToInt64PtrIfNotNil returns a pointer to the int64 value if it's not nil, otherwise returns nil.
 func ToInt64PtrIfNotNil(v int64) *int64 {
+	if v == 0 {
+		return nil
+	}
+	return &v
+}
+
+func ToInt32PtrIfNotZero(v int32) *int32 {
 	if v == 0 {
 		return nil
 	}
