@@ -2,7 +2,7 @@ module github.com/wenpiner/last-admin-common
 
 go 1.24.2
 
-replace github.com/zeromicro/go-zero v1.9.2 => ../last-admin-zero
+replace github.com/zeromicro/go-zero v1.9.2 => github.com/wenpiner/last-admin-zero v1.9.2
 
 require (
 	entgo.io/ent v0.14.5
