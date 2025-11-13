@@ -26,20 +26,38 @@ func (l CasbinConf) NewCasbin(dbType, dsn string) (*casbin.Enforcer, error) {
 	var text string
 	if l.ModelText == "" {
 		text = `
-			[request_definition]
-			r = sub, obj, act
+				[request_definition]
+				# r = sub, dom, obj, act
+				# r.sub: 主体 (用户)
+				# r.dom: 域 (在这里就是您的“资源类型”，如 'api', 'config', 'menu')
+				# r.obj: 客体 (资源路径)
+				# r.act: 动作 (HTTP方法 或 'read'/'write'/'view')
+				r = sub, dom, obj, act
 
-			[policy_definition]
-			p = sub, obj, act
+				[policy_definition]
+				# p = sub, dom, obj, act
+				# p.sub: 主体 (角色)
+				# p.dom: 域 (资源类型)
+				# p.obj: 客体 (资源路径)
+				# p.act: 动作
+				p = sub, dom, obj, act
 
-			[role_definition]
-			g = _, _
+				[role_definition]
+				# g = _, _
+				# 我们保持角色是全局的，不分域
+				g = _, _
 
-			[policy_effect]
-			e = some(where (p.eft == allow))
+				[policy_effect]
+				e = some(where (p.eft == allow))
 
-			[matchers]
-			m = g(r.sub, p.sub) && keyMatch2(r.obj, p.obj) && r.act == p.act
+				[matchers]
+				# m = g(r.sub, p.sub) && r.dom == p.dom && keyMatch2(r.obj,p.obj) && r.act == p.act
+				# 核心改动：增加了 r.dom == p.dom
+				# 1. 检查用户(r.sub)是否属于角色(p.sub)
+				# 2. 检查请求的域(r.dom)是否与策略的域(p.dom)完全匹配
+				# 3. 检查资源路径(r.obj)是否匹配 (继续使用 keyMatch2)
+				# 4. 检查动作(r.act)是否匹配
+				m = g(r.sub, p.sub) && r.dom == p.dom && keyMatch2(r.obj, p.obj) && r.act == p.act
 		`
 	} else {
 		text = l.ModelText
