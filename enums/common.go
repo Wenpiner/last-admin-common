@@ -11,6 +11,12 @@ const (
 
 const (
 	ConfigurationGroupSystem = "/system"
-	ConfigurationRegister    = "register" // 是否开启注册
-	ConfigurationInit        = "init"     // 是否运行初始化
+	ConfigurationGroupPublic = "/public"
+
+	ConfigurationKeyRegister    = "register" // 是否开启注册
+	ConfigurationKeyInit        = "init"     // 是否运行初始化
+
+	// VBen前端基础配置 参考 @link https://doc.vben.pro/guide/essentials/settings.html#%E5%81%8F%E5%A5%BD%E8%AE%BE%E7%BD%AE
+	ConfigurationVBenPreference = "vben_preference"
+
 )
