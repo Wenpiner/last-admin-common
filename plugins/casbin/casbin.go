@@ -115,3 +115,25 @@ func (l CasbinConf) MustNewCasbinWithRedisWatcher(dbType, dsn string, c config.R
 	logx.Must(err)
 	return cbn
 }
+
+// Check
+func Check(cbn *casbin.Enforcer, domain string, rolesIds []string, obj, act string) bool {
+	var reqs [][]any
+	for _, v := range rolesIds {
+		reqs = append(reqs, []any{v, domain, obj, act})
+	}
+
+	res, err := cbn.BatchEnforce(reqs)
+	if err != nil {
+		logx.Errorw("验证 Casbin 异常", logx.Field("error", err))
+		return false
+	}
+
+	for _, v := range res {
+		if v {
+			return true
+		}
+	}
+
+	return false
+}
