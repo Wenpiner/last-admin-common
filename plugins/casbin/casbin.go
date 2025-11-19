@@ -18,6 +18,42 @@ type CasbinConf struct {
 	ModelText string `json:"ModelText,optional,env=CASBIN_MODEL_TEXT"`
 }
 
+// permissionMatch 自定义权限匹配函数
+// 处理权限继承关系：
+// - write 权限包含 read 权限（用于 configuration 域）
+// - admin 权限包含所有权限
+// 参数类型为 interface{} 以兼容 Casbin 的 AddFunction 要求
+func permissionMatch(args ...interface{}) (interface{}, error) {
+	if len(args) != 2 {
+		return false, nil
+	}
+
+	grantedAction, ok1 := args[0].(string)
+	requiredAction, ok2 := args[1].(string)
+
+	if !ok1 || !ok2 {
+		return false, nil
+	}
+
+	// 完全匹配
+	if grantedAction == requiredAction {
+		return true, nil
+	}
+
+	// 权限继承规则
+	// 1. write 包含 read（用于 configuration 域）
+	if requiredAction == "read" && grantedAction == "write" {
+		return true, nil
+	}
+
+	// 2. admin 包含所有权限
+	if grantedAction == "admin" {
+		return true, nil
+	}
+
+	return false, nil
+}
+
 // NewCasbin
 func (l CasbinConf) NewCasbin(dbType, dsn string) (*casbin.Enforcer, error) {
 	adapter, err := ent_adapter.NewAdapter(dbType, dsn)
@@ -51,13 +87,12 @@ func (l CasbinConf) NewCasbin(dbType, dsn string) (*casbin.Enforcer, error) {
 				e = some(where (p.eft == allow))
 
 				[matchers]
-				# m = g(r.sub, p.sub) && r.dom == p.dom && keyMatch2(r.obj,p.obj) && r.act == p.act
-				# 核心改动：增加了 r.dom == p.dom
+				# 使用自定义 permissionMatch 函数处理权限继承
 				# 1. 检查用户(r.sub)是否属于角色(p.sub)
 				# 2. 检查请求的域(r.dom)是否与策略的域(p.dom)完全匹配
 				# 3. 检查资源路径(r.obj)是否匹配 (继续使用 keyMatch2)
-				# 4. 检查动作(r.act)是否匹配
-				m = g(r.sub, p.sub) && r.dom == p.dom && keyMatch2(r.obj, p.obj) && r.act == p.act
+				# 4. 检查动作(r.act)是否匹配，支持权限继承
+				m = g(r.sub, p.sub) && r.dom == p.dom && keyMatch2(r.obj, p.obj) && permissionMatch(p.act, r.act)
 		`
 	} else {
 		text = l.ModelText
@@ -67,6 +102,9 @@ func (l CasbinConf) NewCasbin(dbType, dsn string) (*casbin.Enforcer, error) {
 
 	enforcer, err := casbin.NewEnforcer(m, adapter)
 	logx.Must(err)
+
+	// 注册自定义权限匹配函数
+	enforcer.AddFunction("permissionMatch", permissionMatch)
 
 	err = enforcer.LoadPolicy()
 	logx.Must(err)
