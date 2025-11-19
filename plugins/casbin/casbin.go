@@ -145,6 +145,8 @@ func (l CasbinConf) MustNewRedisWatcher(c config.RedisConfig, f func(string2 str
 func (l CasbinConf) MustNewCasbinWithRedisWatcher(dbType, dsn string, c config.RedisConfig) *casbin.Enforcer {
 	cbn := l.MustNewCasbin(dbType, dsn)
 	w := l.MustNewRedisWatcher(c, func(data string) {
+		// 在 watcher 回调中重新注册自定义函数，确保策略更新后函数仍然可用
+		cbn.AddFunction("permissionMatch", permissionMatch)
 		rediswatcher.DefaultUpdateCallback(cbn)(data)
 	})
 	err := cbn.SetWatcher(w)
