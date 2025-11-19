@@ -100,22 +100,24 @@ func (l CasbinConf) NewCasbin(dbType, dsn string) (*casbin.Enforcer, error) {
 	m, err := model.NewModelFromString(text)
 	logx.Must(err)
 
-	// 创建 enforcer，NewEnforcer 会自动调用 LoadPolicy
-	// 但我们需要先创建一个空的 enforcer，然后注册函数，再加载策略
-	enforcer, err := casbin.NewEnforcer(m)
+	// 创建一个临时的 enforcer 来注册自定义函数
+	// 这是必要的，因为 Casbin 在 NewEnforcer 时会验证 matcher 中的函数
+	tempEnforcer, err := casbin.NewEnforcer(m)
 	logx.Must(err)
 
-	// 在加载策略之前注册自定义权限匹配函数
-	// 这很重要，因为 Casbin 在加载策略时会验证 matcher 中的函数
-	enforcer.AddFunction("permissionMatch", permissionMatch)
+	// 在创建真正的 enforcer 之前注册自定义权限匹配函数
+	// 这很重要，因为 Casbin 在 NewEnforcer 时会验证 matcher 中的函数
+	logx.Infow("Registering permissionMatch function", logx.Field("function", "permissionMatch"))
+	tempEnforcer.AddFunction("permissionMatch", permissionMatch)
 
-	// 设置适配器并加载策略
-	enforcer.SetAdapter(adapter)
-
-	err = enforcer.LoadPolicy()
+	// 现在设置适配器并加载策略
+	tempEnforcer.SetAdapter(adapter)
+	logx.Infow("Loading policy from adapter")
+	err = tempEnforcer.LoadPolicy()
 	logx.Must(err)
 
-	return enforcer, nil
+	logx.Infow("Casbin enforcer initialized successfully")
+	return tempEnforcer, nil
 }
 
 // MustNewCasbin
@@ -153,6 +155,7 @@ func (l CasbinConf) MustNewCasbinWithRedisWatcher(dbType, dsn string, c config.R
 	w := l.MustNewRedisWatcher(c, func(data string) {
 		// 在 watcher 回调中重新注册自定义函数，确保策略更新后函数仍然可用
 		cbn.AddFunction("permissionMatch", permissionMatch)
+		logx.Infow("Registered permissionMatch function after policy update")	
 		rediswatcher.DefaultUpdateCallback(cbn)(data)
 	})
 	err := cbn.SetWatcher(w)
