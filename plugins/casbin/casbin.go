@@ -100,11 +100,17 @@ func (l CasbinConf) NewCasbin(dbType, dsn string) (*casbin.Enforcer, error) {
 	m, err := model.NewModelFromString(text)
 	logx.Must(err)
 
-	enforcer, err := casbin.NewEnforcer(m, adapter)
+	// 创建 enforcer，NewEnforcer 会自动调用 LoadPolicy
+	// 但我们需要先创建一个空的 enforcer，然后注册函数，再加载策略
+	enforcer, err := casbin.NewEnforcer(m)
 	logx.Must(err)
 
-	// 注册自定义权限匹配函数
+	// 在加载策略之前注册自定义权限匹配函数
+	// 这很重要，因为 Casbin 在加载策略时会验证 matcher 中的函数
 	enforcer.AddFunction("permissionMatch", permissionMatch)
+
+	// 设置适配器并加载策略
+	enforcer.SetAdapter(adapter)
 
 	err = enforcer.LoadPolicy()
 	logx.Must(err)
