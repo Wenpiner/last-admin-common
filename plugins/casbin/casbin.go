@@ -160,8 +160,6 @@ func (l CasbinConf) MustNewCasbinWithRedisWatcher(dbType, dsn string, c config.R
 	})
 	err := cbn.SetWatcher(w)
 	logx.Must(err)
-	err = cbn.SavePolicy()
-	logx.Must(err)
 	return cbn
 }
 
